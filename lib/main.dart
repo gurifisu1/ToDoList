@@ -11,6 +11,7 @@ import 'screens/home_screen.dart';
 import 'screens/task_detail_screen.dart';
 import 'screens/tag_management_screen.dart';
 import 'theme/app_theme.dart';
+import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +42,8 @@ class TodoApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     final router = GoRouter(
       initialLocation: '/',
       redirect: (context, state) {
@@ -80,14 +83,10 @@ class TodoApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'ToDo',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       routerConfig: router,
-      builder: (context, child) {
-        return Container(
-          decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
-          child: child,
-        );
-      },
     );
   }
 }

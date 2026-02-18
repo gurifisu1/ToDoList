@@ -5,6 +5,7 @@ import '../models/task.dart';
 import '../providers/auth_provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/tag_provider.dart';
+import '../providers/theme_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/excel_export.dart';
 import '../widgets/glass_card.dart';
@@ -27,44 +28,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final filteredTasks = ref.watch(filteredTaskListProvider);
     final filter = ref.watch(taskFilterProvider);
     final tags = ref.watch(tagListProvider);
+    final colors = AppColors.of(context);
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(context, filter),
-              if (_showFilters) _buildFilterBar(filter, tags),
-              Expanded(
-                child: filteredTasks.when(
-                  data: (tasks) => tasks.isEmpty
-                      ? _buildEmptyState()
-                      : _buildTaskList(tasks),
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(
-                      color: AppTheme.primaryColor,
-                    ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildAppBar(context, filter, colors),
+            if (_showFilters) _buildFilterBar(filter, tags, colors),
+            Expanded(
+              child: filteredTasks.when(
+                data: (tasks) => tasks.isEmpty
+                    ? _buildEmptyState(colors)
+                    : _buildTaskList(tasks),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.primaryColor,
                   ),
-                  error: (e, _) => Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.error_outline,
-                            color: AppTheme.accentRed, size: 48),
-                        const SizedBox(height: 16),
-                        Text('エラーが発生しました',
-                            style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        Text(e.toString(),
-                            style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ),
+                ),
+                error: (e, _) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          color: AppTheme.accentRed, size: 48),
+                      const SizedBox(height: 16),
+                      Text('エラーが発生しました',
+                          style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 8),
+                      Text(e.toString(),
+                          style: Theme.of(context).textTheme.bodySmall),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -74,9 +73,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildAppBar(BuildContext context, TaskFilterState filter) {
+  Widget _buildAppBar(BuildContext context, TaskFilterState filter, AppColors colors) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
       child: Row(
         children: [
           Expanded(
@@ -94,10 +95,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
+          // Theme toggle
+          IconButton(
+            icon: Icon(
+              isDark ? Icons.light_mode : Icons.dark_mode,
+              color: colors.textPrimary,
+            ),
+            onPressed: () {
+              ref.read(themeModeProvider.notifier).state =
+                  isDark ? ThemeMode.light : ThemeMode.dark;
+            },
+          ),
           // Search
           IconButton(
-            icon: const Icon(Icons.search, color: AppTheme.textPrimary),
-            onPressed: () => _showSearchDialog(context),
+            icon: Icon(Icons.search, color: colors.textPrimary),
+            onPressed: () => _showSearchDialog(context, colors),
           ),
           // Filter toggle
           IconButton(
@@ -105,14 +117,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Icons.tune,
               color: _showFilters
                   ? AppTheme.primaryColor
-                  : AppTheme.textPrimary,
+                  : colors.textPrimary,
             ),
             onPressed: () => setState(() => _showFilters = !_showFilters),
           ),
           // More menu
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppTheme.textPrimary),
-            color: const Color(0xFF2E2E3E),
+            icon: Icon(Icons.more_vert, color: colors.textPrimary),
+            color: Theme.of(context).colorScheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -127,25 +139,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'export',
                 child: Row(
                   children: [
-                    Icon(Icons.file_download, color: AppTheme.textSecondary),
-                    SizedBox(width: 12),
+                    Icon(Icons.file_download, color: colors.textSecondary),
+                    const SizedBox(width: 12),
                     Text('Excelエクスポート',
-                        style: TextStyle(color: AppTheme.textPrimary)),
+                        style: TextStyle(color: colors.textPrimary)),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'tags',
                 child: Row(
                   children: [
-                    Icon(Icons.label_outline, color: AppTheme.textSecondary),
-                    SizedBox(width: 12),
+                    Icon(Icons.label_outline, color: colors.textSecondary),
+                    const SizedBox(width: 12),
                     Text('タグ管理',
-                        style: TextStyle(color: AppTheme.textPrimary)),
+                        style: TextStyle(color: colors.textPrimary)),
                   ],
                 ),
               ),
@@ -168,7 +180,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildFilterBar(TaskFilterState filter, AsyncValue<dynamic> tags) {
+  Widget _buildFilterBar(TaskFilterState filter, AsyncValue<dynamic> tags, AppColors colors) {
     return GlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(12),
@@ -180,16 +192,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                const Text('並べ替え: ',
+                Text('並べ替え: ',
                     style:
-                        TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-                _buildSortChip('カスタム', TaskSortOption.sortOrder, filter),
+                        TextStyle(color: colors.textSecondary, fontSize: 12)),
+                _buildSortChip('カスタム', TaskSortOption.sortOrder, filter, colors),
                 const SizedBox(width: 4),
-                _buildSortChip('優先度', TaskSortOption.priority, filter),
+                _buildSortChip('優先度', TaskSortOption.priority, filter, colors),
                 const SizedBox(width: 4),
-                _buildSortChip('期限', TaskSortOption.dueDate, filter),
+                _buildSortChip('期限', TaskSortOption.dueDate, filter, colors),
                 const SizedBox(width: 4),
-                _buildSortChip('作成日', TaskSortOption.createdAt, filter),
+                _buildSortChip('作成日', TaskSortOption.createdAt, filter, colors),
               ],
             ),
           ),
@@ -220,7 +232,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         style: TextStyle(
                           color: isSelected
                               ? AppTheme.getPriorityColor(entry.key)
-                              : AppTheme.textSecondary,
+                              : colors.textSecondary,
                           fontSize: 12,
                         ),
                       ),
@@ -246,7 +258,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildSortChip(
-      String label, TaskSortOption option, TaskFilterState filter) {
+      String label, TaskSortOption option, TaskFilterState filter, AppColors colors) {
     final isSelected = filter.sortOption == option;
     return ChoiceChip(
       label: Row(
@@ -255,7 +267,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(
             label,
             style: TextStyle(
-              color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
+              color: isSelected ? AppTheme.primaryColor : colors.textSecondary,
               fontSize: 12,
             ),
           ),
@@ -283,7 +295,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppColors colors) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -297,7 +309,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(
             'タスクがありません',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: colors.textSecondary,
                 ),
           ),
           const SizedBox(height: 8),
@@ -352,7 +364,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showSearchDialog(BuildContext context) {
+  void _showSearchDialog(BuildContext context, AppColors colors) {
     final controller = TextEditingController(
       text: ref.read(taskFilterProvider).searchQuery,
     );
@@ -363,7 +375,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: const TextStyle(color: AppTheme.textPrimary),
+          style: TextStyle(color: colors.textPrimary),
           decoration: const InputDecoration(
             hintText: 'キーワードを入力...',
             prefixIcon: Icon(Icons.search),
@@ -431,6 +443,7 @@ class _TaskCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
     final isOverdue =
         task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
 
@@ -453,7 +466,7 @@ class _TaskCard extends ConsumerWidget {
                     border: Border.all(
                       color: task.isCompleted
                           ? AppTheme.accentGreen
-                          : AppTheme.glassBorder,
+                          : colors.cardBorder,
                       width: 2,
                     ),
                     color: task.isCompleted
@@ -473,8 +486,8 @@ class _TaskCard extends ConsumerWidget {
                   task.title,
                   style: TextStyle(
                     color: task.isCompleted
-                        ? AppTheme.textTertiary
-                        : AppTheme.textPrimary,
+                        ? colors.textTertiary
+                        : colors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     decoration:
@@ -495,8 +508,8 @@ class _TaskCard extends ConsumerWidget {
                 task.description!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppTheme.textTertiary,
+                style: TextStyle(
+                  color: colors.textTertiary,
                   fontSize: 13,
                 ),
               ),
@@ -515,7 +528,7 @@ class _TaskCard extends ConsumerWidget {
                     size: 14,
                     color: isOverdue && !task.isCompleted
                         ? AppTheme.accentRed
-                        : AppTheme.textTertiary,
+                        : colors.textTertiary,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -524,32 +537,32 @@ class _TaskCard extends ConsumerWidget {
                       fontSize: 12,
                       color: isOverdue && !task.isCompleted
                           ? AppTheme.accentRed
-                          : AppTheme.textTertiary,
+                          : colors.textTertiary,
                     ),
                   ),
                   const SizedBox(width: 12),
                 ],
                 // Estimated time
                 if (task.estimatedTimeLabel != null) ...[
-                  const Icon(Icons.access_time,
-                      size: 14, color: AppTheme.textTertiary),
+                  Icon(Icons.access_time,
+                      size: 14, color: colors.textTertiary),
                   const SizedBox(width: 4),
                   Text(
                     task.estimatedTimeLabel!,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppTheme.textTertiary),
+                    style: TextStyle(
+                        fontSize: 12, color: colors.textTertiary),
                   ),
                   const SizedBox(width: 12),
                 ],
                 // Subtask count
                 if (task.subtasks.isNotEmpty) ...[
-                  const Icon(Icons.subdirectory_arrow_right,
-                      size: 14, color: AppTheme.textTertiary),
+                  Icon(Icons.subdirectory_arrow_right,
+                      size: 14, color: colors.textTertiary),
                   const SizedBox(width: 4),
                   Text(
                     '${task.subtasks.where((s) => s.isCompleted).length}/${task.subtasks.length}',
-                    style: const TextStyle(
-                        fontSize: 12, color: AppTheme.textTertiary),
+                    style: TextStyle(
+                        fontSize: 12, color: colors.textTertiary),
                   ),
                   const SizedBox(width: 8),
                   // Progress bar
@@ -557,8 +570,7 @@ class _TaskCard extends ConsumerWidget {
                     width: 40,
                     child: LinearProgressIndicator(
                       value: task.completionRate,
-                      backgroundColor:
-                          AppTheme.glassWhite,
+                      backgroundColor: colors.cardBackground,
                       color: AppTheme.accentGreen,
                       minHeight: 3,
                       borderRadius: BorderRadius.circular(2),
