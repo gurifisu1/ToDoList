@@ -27,108 +27,106 @@ class TagManagementScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tagsAsync = ref.watch(tagListProvider);
+    final colors = AppColors.of(context);
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 16, 16),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios,
-                          color: AppTheme.textPrimary),
-                      onPressed: () => context.pop(),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'タグ管理',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                  ],
-                ),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 16, 16),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back_ios,
+                        color: colors.textPrimary),
+                    onPressed: () => context.pop(),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'タグ管理',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                ],
               ),
-              Expanded(
-                child: tagsAsync.when(
-                  data: (tags) {
-                    if (tags.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
+            ),
+            Expanded(
+              child: tagsAsync.when(
+                data: (tags) {
+                  if (tags.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.label_off,
+                              size: 64,
+                              color:
+                                  AppTheme.primaryColor.withValues(alpha: 0.3)),
+                          const SizedBox(height: 16),
+                          Text(
+                            'タグがありません',
+                            style: TextStyle(
+                              color: colors.textSecondary,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 80),
+                    itemCount: tags.length,
+                    itemBuilder: (context, index) {
+                      final tag = tags[index];
+                      return GlassCard(
+                        child: Row(
                           children: [
-                            Icon(Icons.label_off,
-                                size: 64,
-                                color:
-                                    AppTheme.primaryColor.withValues(alpha: 0.3)),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'タグがありません',
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 16,
+                            Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: tag.colorValue,
+                                shape: BoxShape.circle,
                               ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                tag.name,
+                                style: TextStyle(
+                                  color: tag.colorValue,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.edit,
+                                  size: 18, color: colors.textSecondary),
+                              onPressed: () =>
+                                  _editTag(context, ref, tag),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  size: 18, color: AppTheme.accentRed),
+                              onPressed: () =>
+                                  _deleteTag(context, ref, tag),
                             ),
                           ],
                         ),
                       );
-                    }
-                    return ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 80),
-                      itemCount: tags.length,
-                      itemBuilder: (context, index) {
-                        final tag = tags[index];
-                        return GlassCard(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 16,
-                                height: 16,
-                                decoration: BoxDecoration(
-                                  color: tag.colorValue,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  tag.name,
-                                  style: TextStyle(
-                                    color: tag.colorValue,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.edit,
-                                    size: 18, color: AppTheme.textSecondary),
-                                onPressed: () =>
-                                    _editTag(context, ref, tag),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline,
-                                    size: 18, color: AppTheme.accentRed),
-                                onPressed: () =>
-                                    _deleteTag(context, ref, tag),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  loading: () => const Center(
-                      child: CircularProgressIndicator(
-                          color: AppTheme.primaryColor)),
-                  error: (e, _) => Center(child: Text('Error: $e')),
-                ),
+                    },
+                  );
+                },
+                loading: () => const Center(
+                    child: CircularProgressIndicator(
+                        color: AppTheme.primaryColor)),
+                error: (e, _) => Center(child: Text('Error: $e')),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -145,6 +143,7 @@ class TagManagementScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) {
+        final colors = AppColors.of(context);
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -155,7 +154,7 @@ class TagManagementScreen extends ConsumerWidget {
                   TextField(
                     controller: nameController,
                     autofocus: true,
-                    style: const TextStyle(color: AppTheme.textPrimary),
+                    style: TextStyle(color: colors.textPrimary),
                     decoration: const InputDecoration(
                       labelText: 'タグ名',
                       hintText: '例: 仕事、個人...',
@@ -178,7 +177,7 @@ class TagManagementScreen extends ConsumerWidget {
                             color: colorValue,
                             shape: BoxShape.circle,
                             border: isSelected
-                                ? Border.all(color: Colors.white, width: 3)
+                                ? Border.all(color: colors.textPrimary, width: 3)
                                 : null,
                           ),
                           child: isSelected
@@ -230,6 +229,7 @@ class TagManagementScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) {
+        final colors = AppColors.of(context);
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -239,7 +239,7 @@ class TagManagementScreen extends ConsumerWidget {
                 children: [
                   TextField(
                     controller: nameController,
-                    style: const TextStyle(color: AppTheme.textPrimary),
+                    style: TextStyle(color: colors.textPrimary),
                     decoration: const InputDecoration(labelText: 'タグ名'),
                   ),
                   const SizedBox(height: 16),
@@ -259,7 +259,7 @@ class TagManagementScreen extends ConsumerWidget {
                             color: colorValue,
                             shape: BoxShape.circle,
                             border: isSelected
-                                ? Border.all(color: Colors.white, width: 3)
+                                ? Border.all(color: colors.textPrimary, width: 3)
                                 : null,
                           ),
                           child: isSelected

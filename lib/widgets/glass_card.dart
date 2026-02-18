@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -7,7 +6,6 @@ class GlassCard extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double borderRadius;
-  final double blur;
   final Color? color;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -18,7 +16,6 @@ class GlassCard extends StatelessWidget {
     this.padding,
     this.margin,
     this.borderRadius = 16,
-    this.blur = 10,
     this.color,
     this.onTap,
     this.onLongPress,
@@ -26,38 +23,25 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final bgColor = color ?? colors.cardBackground;
+
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              onLongPress: onLongPress,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Container(
+            padding: padding ?? const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: bgColor,
               borderRadius: BorderRadius.circular(borderRadius),
-              child: Container(
-                padding: padding ?? const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color ?? AppTheme.glassWhite,
-                  borderRadius: BorderRadius.circular(borderRadius),
-                  border: Border.all(color: AppTheme.glassBorder, width: 0.5),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      (color ?? AppTheme.glassWhite)
-                          .withValues(alpha: 0.15),
-                      (color ?? AppTheme.glassWhite)
-                          .withValues(alpha: 0.05),
-                    ],
-                  ),
-                ),
-                child: child,
-              ),
+              border: Border.all(color: colors.cardBorder, width: 0.5),
             ),
+            child: child,
           ),
         ),
       ),

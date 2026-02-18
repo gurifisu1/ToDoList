@@ -68,6 +68,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     final tasksAsync = ref.watch(taskListProvider);
     final allTags = ref.watch(tagListProvider);
     final subtaskFilter = ref.watch(subtaskFilterProvider);
+    final colors = AppColors.of(context);
 
     Task? task;
     if (!_isNew) {
@@ -85,82 +86,79 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     }
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildTopBar(context),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: TextField(
-                          controller: _titleController,
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          decoration: const InputDecoration(
-                            hintText: 'タスク名を入力...',
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            filled: false,
-                          ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildTopBar(context, colors),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 80),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextField(
+                        controller: _titleController,
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'タスク名を入力...',
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: false,
                         ),
                       ),
-                      // Description
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: TextField(
-                          controller: _descController,
-                          maxLines: null,
-                          style: const TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 14,
-                          ),
-                          decoration: const InputDecoration(
-                            hintText: '説明を追加...',
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            filled: false,
-                          ),
+                    ),
+                    // Description
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextField(
+                        controller: _descController,
+                        maxLines: null,
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontSize: 14,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: '説明を追加...',
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: false,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // Properties
-                      _buildPropertySection(allTags),
-                      // Subtasks section (only for existing tasks)
-                      if (!_isNew && task != null) ...[
-                        const SizedBox(height: 24),
-                        _buildSubtaskSection(task, subtaskFilter, allTags),
-                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Properties
+                    _buildPropertySection(allTags, colors),
+                    // Subtasks section (only for existing tasks)
+                    if (!_isNew && task != null) ...[
+                      const SizedBox(height: 24),
+                      _buildSubtaskSection(task, subtaskFilter, allTags, colors),
                     ],
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context, AppColors colors) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: AppTheme.textPrimary),
+            icon: Icon(Icons.arrow_back_ios, color: colors.textPrimary),
             onPressed: () => context.pop(),
           ),
           const Spacer(),
@@ -178,7 +176,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     );
   }
 
-  Widget _buildPropertySection(AsyncValue<List<Tag>> allTags) {
+  Widget _buildPropertySection(AsyncValue<List<Tag>> allTags, AppColors colors) {
     return GlassCard(
       child: Column(
         children: [
@@ -197,8 +195,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             onClear: _dueDate != null
                 ? () => setState(() => _dueDate = null)
                 : null,
+            colors: colors,
           ),
-          const Divider(color: AppTheme.glassBorder, height: 1),
+          Divider(color: colors.cardBorder, height: 1),
           // Estimated time
           _buildPropertyRow(
             icon: Icons.access_time,
@@ -210,8 +209,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             onClear: _estimatedMinutes != null
                 ? () => setState(() => _estimatedMinutes = null)
                 : null,
+            colors: colors,
           ),
-          const Divider(color: AppTheme.glassBorder, height: 1),
+          Divider(color: colors.cardBorder, height: 1),
           // Priority
           _buildPropertyRow(
             icon: Icons.flag,
@@ -233,7 +233,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       border: Border.all(
                         color: _priority == i
                             ? AppTheme.getPriorityColor(i)
-                            : AppTheme.glassBorder,
+                            : colors.cardBorder,
                       ),
                     ),
                     child: Text(
@@ -241,7 +241,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       style: TextStyle(
                         color: _priority == i
                             ? AppTheme.getPriorityColor(i)
-                            : AppTheme.textTertiary,
+                            : colors.textTertiary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -250,8 +250,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 );
               }),
             ),
+            colors: colors,
           ),
-          const Divider(color: AppTheme.glassBorder, height: 1),
+          Divider(color: colors.cardBorder, height: 1),
           // Reminder (only on non-web)
           if (!kIsWeb) ...[
             _buildPropertyRow(
@@ -264,11 +265,12 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
               onClear: _reminderAt != null
                   ? () => setState(() => _reminderAt = null)
                   : null,
+              colors: colors,
             ),
-            const Divider(color: AppTheme.glassBorder, height: 1),
+            Divider(color: colors.cardBorder, height: 1),
           ],
           // Tags
-          _buildTagsRow(allTags),
+          _buildTagsRow(allTags, colors),
         ],
       ),
     );
@@ -282,6 +284,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     Widget? trailing,
     VoidCallback? onTap,
     VoidCallback? onClear,
+    required AppColors colors,
   }) {
     return InkWell(
       onTap: onTap,
@@ -289,12 +292,12 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppTheme.textSecondary),
+            Icon(icon, size: 20, color: colors.textSecondary),
             const SizedBox(width: 12),
             Text(
               label,
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
+              style: TextStyle(
+                color: colors.textSecondary,
                 fontSize: 14,
               ),
             ),
@@ -305,7 +308,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
               Text(
                 value,
                 style: TextStyle(
-                  color: valueColor ?? AppTheme.textPrimary,
+                  color: valueColor ?? colors.textPrimary,
                   fontSize: 14,
                 ),
               ),
@@ -314,8 +317,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 padding: const EdgeInsets.only(left: 8),
                 child: GestureDetector(
                   onTap: onClear,
-                  child: const Icon(Icons.close,
-                      size: 16, color: AppTheme.textTertiary),
+                  child: Icon(Icons.close,
+                      size: 16, color: colors.textTertiary),
                 ),
               ),
           ],
@@ -324,7 +327,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     );
   }
 
-  Widget _buildTagsRow(AsyncValue<List<Tag>> allTagsAsync) {
+  Widget _buildTagsRow(AsyncValue<List<Tag>> allTagsAsync, AppColors colors) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
@@ -332,12 +335,12 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.label_outline,
-                  size: 20, color: AppTheme.textSecondary),
+              Icon(Icons.label_outline,
+                  size: 20, color: colors.textSecondary),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'タグ',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                style: TextStyle(color: colors.textSecondary, fontSize: 14),
               ),
               const Spacer(),
               GestureDetector(
@@ -373,6 +376,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     Task task,
     SubTaskFilterState filter,
     AsyncValue<List<Tag>> allTags,
+    AppColors colors,
   ) {
     var subtasks = List<SubTask>.from(task.subtasks);
 
@@ -417,10 +421,10 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              const Text(
+              Text(
                 'サブタスク',
                 style: TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -429,13 +433,13 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
               Text(
                 '${task.subtasks.where((s) => s.isCompleted).length}/${task.subtasks.length}',
                 style:
-                    const TextStyle(color: AppTheme.textTertiary, fontSize: 14),
+                    TextStyle(color: colors.textTertiary, fontSize: 14),
               ),
               const Spacer(),
               // Subtask filter/sort
               PopupMenuButton<String>(
-                icon: const Icon(Icons.sort, color: AppTheme.textSecondary, size: 20),
-                color: const Color(0xFF2E2E3E),
+                icon: Icon(Icons.sort, color: colors.textSecondary, size: 20),
+                color: Theme.of(context).colorScheme.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -455,25 +459,28 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       notifier.state = const SubTaskFilterState();
                   }
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                      value: 'sort_order',
-                      child: Text('カスタム順',
-                          style: TextStyle(color: AppTheme.textPrimary))),
-                  const PopupMenuItem(
-                      value: 'sort_priority',
-                      child: Text('優先度順',
-                          style: TextStyle(color: AppTheme.textPrimary))),
-                  const PopupMenuItem(
-                      value: 'sort_due',
-                      child: Text('期限順',
-                          style: TextStyle(color: AppTheme.textPrimary))),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
-                      value: 'clear_filter',
-                      child: Text('フィルターをクリア',
-                          style: TextStyle(color: AppTheme.textSecondary))),
-                ],
+                itemBuilder: (context) {
+                  final menuColors = AppColors.of(context);
+                  return [
+                    PopupMenuItem(
+                        value: 'sort_order',
+                        child: Text('カスタム順',
+                            style: TextStyle(color: menuColors.textPrimary))),
+                    PopupMenuItem(
+                        value: 'sort_priority',
+                        child: Text('優先度順',
+                            style: TextStyle(color: menuColors.textPrimary))),
+                    PopupMenuItem(
+                        value: 'sort_due',
+                        child: Text('期限順',
+                            style: TextStyle(color: menuColors.textPrimary))),
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                        value: 'clear_filter',
+                        child: Text('フィルターをクリア',
+                            style: TextStyle(color: menuColors.textSecondary))),
+                  ];
+                },
               ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline,
@@ -490,7 +497,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
                 value: task.completionRate,
-                backgroundColor: AppTheme.glassWhite,
+                backgroundColor: colors.cardBackground,
                 color: AppTheme.accentGreen,
                 minHeight: 4,
               ),
@@ -547,17 +554,6 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
       initialDate: _dueDate ?? DateTime.now(),
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppTheme.primaryColor,
-              surface: Color(0xFF1E1E2E),
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (date != null) {
       setState(() => _dueDate = date);
@@ -565,6 +561,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   }
 
   Future<void> _pickEstimatedTime() async {
+    final colors = AppColors.of(context);
     final controller = TextEditingController(
       text: _estimatedMinutes?.toString() ?? '',
     );
@@ -576,7 +573,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           controller: controller,
           keyboardType: TextInputType.number,
           autofocus: true,
-          style: const TextStyle(color: AppTheme.textPrimary),
+          style: TextStyle(color: colors.textPrimary),
           decoration: const InputDecoration(
             hintText: '例: 60',
             suffixText: '分',
@@ -608,34 +605,12 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
       initialDate: _reminderAt ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppTheme.primaryColor,
-              surface: Color(0xFF1E1E2E),
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (date == null || !mounted) return;
 
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppTheme.primaryColor,
-              surface: Color(0xFF1E1E2E),
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (time == null) return;
 
@@ -654,34 +629,35 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
     final allTags = allTagsAsync.valueOrNull ?? [];
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E2E),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final colors = AppColors.of(context);
             return Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'タグを選択',
                     style: TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 16),
                   if (allTags.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
                       child: Text(
                         'タグがありません。メニューからタグを作成してください。',
-                        style: TextStyle(color: AppTheme.textSecondary),
+                        style: TextStyle(color: colors.textSecondary),
                       ),
                     )
                   else
@@ -826,6 +802,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   }
 
   Future<void> _addSubTask(Task task) async {
+    final colors = AppColors.of(context);
     final controller = TextEditingController();
     final result = await showDialog<String>(
       context: context,
@@ -834,7 +811,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: const TextStyle(color: AppTheme.textPrimary),
+          style: TextStyle(color: colors.textPrimary),
           decoration: const InputDecoration(hintText: 'サブタスク名...'),
         ),
         actions: [
@@ -889,14 +866,16 @@ class _SubTaskTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
+
     return GlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
           // Drag handle
-          const Icon(Icons.drag_indicator,
-              size: 18, color: AppTheme.textTertiary),
+          Icon(Icons.drag_indicator,
+              size: 18, color: colors.textTertiary),
           const SizedBox(width: 8),
           // Checkbox
           GestureDetector(
@@ -911,7 +890,7 @@ class _SubTaskTile extends ConsumerWidget {
                 border: Border.all(
                   color: subtask.isCompleted
                       ? AppTheme.accentGreen
-                      : AppTheme.glassBorder,
+                      : colors.cardBorder,
                   width: 1.5,
                 ),
                 color: subtask.isCompleted
@@ -934,8 +913,8 @@ class _SubTaskTile extends ConsumerWidget {
                   subtask.title,
                   style: TextStyle(
                     color: subtask.isCompleted
-                        ? AppTheme.textTertiary
-                        : AppTheme.textPrimary,
+                        ? colors.textTertiary
+                        : colors.textPrimary,
                     fontSize: 14,
                     decoration: subtask.isCompleted
                         ? TextDecoration.lineThrough
@@ -953,7 +932,7 @@ class _SubTaskTile extends ConsumerWidget {
                               color: subtask.dueDate!
                                       .isBefore(DateTime.now())
                                   ? AppTheme.accentRed
-                                  : AppTheme.textTertiary),
+                                  : colors.textTertiary),
                           const SizedBox(width: 3),
                           Text(
                             DateFormat('M/d').format(subtask.dueDate!),
@@ -962,7 +941,7 @@ class _SubTaskTile extends ConsumerWidget {
                               color: subtask.dueDate!
                                       .isBefore(DateTime.now())
                                   ? AppTheme.accentRed
-                                  : AppTheme.textTertiary,
+                                  : colors.textTertiary,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -981,7 +960,7 @@ class _SubTaskTile extends ConsumerWidget {
           const SizedBox(width: 4),
           // Edit button
           IconButton(
-            icon: const Icon(Icons.edit, size: 16, color: AppTheme.textTertiary),
+            icon: Icon(Icons.edit, size: 16, color: colors.textTertiary),
             constraints: const BoxConstraints(maxWidth: 32, maxHeight: 32),
             padding: EdgeInsets.zero,
             onPressed: () =>
@@ -989,8 +968,7 @@ class _SubTaskTile extends ConsumerWidget {
           ),
           // Delete button
           IconButton(
-            icon:
-                const Icon(Icons.close, size: 16, color: AppTheme.textTertiary),
+            icon: Icon(Icons.close, size: 16, color: colors.textTertiary),
             constraints: const BoxConstraints(maxWidth: 32, maxHeight: 32),
             padding: EdgeInsets.zero,
             onPressed: () =>
@@ -1017,13 +995,14 @@ class _SubTaskTile extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E2E),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final colors = AppColors.of(context);
             return Padding(
               padding: EdgeInsets.only(
                 left: 20,
@@ -1035,10 +1014,10 @@ class _SubTaskTile extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'サブタスクを編集',
                     style: TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1046,15 +1025,15 @@ class _SubTaskTile extends ConsumerWidget {
                   const SizedBox(height: 16),
                   TextField(
                     controller: titleController,
-                    style: const TextStyle(color: AppTheme.textPrimary),
+                    style: TextStyle(color: colors.textPrimary),
                     decoration: const InputDecoration(labelText: 'タスク名'),
                   ),
                   const SizedBox(height: 16),
                   // Priority
                   Row(
                     children: [
-                      const Text('優先度: ',
-                          style: TextStyle(color: AppTheme.textSecondary)),
+                      Text('優先度: ',
+                          style: TextStyle(color: colors.textSecondary)),
                       ...List.generate(4, (i) {
                         return GestureDetector(
                           onTap: () => setModalState(() => priority = i),
@@ -1071,7 +1050,7 @@ class _SubTaskTile extends ConsumerWidget {
                               border: Border.all(
                                 color: priority == i
                                     ? AppTheme.getPriorityColor(i)
-                                    : AppTheme.glassBorder,
+                                    : colors.cardBorder,
                               ),
                             ),
                             child: Text(
@@ -1079,7 +1058,7 @@ class _SubTaskTile extends ConsumerWidget {
                               style: TextStyle(
                                 color: priority == i
                                     ? AppTheme.getPriorityColor(i)
-                                    : AppTheme.textTertiary,
+                                    : colors.textTertiary,
                                 fontSize: 12,
                               ),
                             ),
@@ -1092,8 +1071,8 @@ class _SubTaskTile extends ConsumerWidget {
                   // Due date
                   Row(
                     children: [
-                      const Text('期限: ',
-                          style: TextStyle(color: AppTheme.textSecondary)),
+                      Text('期限: ',
+                          style: TextStyle(color: colors.textSecondary)),
                       TextButton(
                         onPressed: () async {
                           final date = await showDatePicker(
@@ -1104,17 +1083,6 @@ class _SubTaskTile extends ConsumerWidget {
                             lastDate: parentDueDate ??
                                 DateTime.now()
                                     .add(const Duration(days: 365 * 5)),
-                            builder: (context, child) {
-                              return Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: const ColorScheme.dark(
-                                    primary: AppTheme.primaryColor,
-                                    surface: Color(0xFF1E1E2E),
-                                  ),
-                                ),
-                                child: child!,
-                              );
-                            },
                           );
                           if (date != null) {
                             setModalState(() => dueDate = date);
@@ -1129,8 +1097,8 @@ class _SubTaskTile extends ConsumerWidget {
                       ),
                       if (dueDate != null)
                         IconButton(
-                          icon: const Icon(Icons.close,
-                              size: 16, color: AppTheme.textTertiary),
+                          icon: Icon(Icons.close,
+                              size: 16, color: colors.textTertiary),
                           onPressed: () =>
                               setModalState(() => dueDate = null),
                         ),
