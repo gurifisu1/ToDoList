@@ -1,0 +1,58 @@
+name: todo_app
+description: "A ToDo app with glassmorphism design for iOS and Web"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Supabase
+  supabase_flutter: ^2.8.0
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Routing
+  go_router: ^14.8.1
+
+  # Date/Time
+  intl: ^0.19.0
+
+  # Excel Export
+  excel: ^4.0.6
+  path_provider: ^2.1.5
+  share_plus: ^10.1.4
+
+  # Local Notifications (iOS reminders)
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
+
+  # UI
+  google_fonts: ^6.2.1
+  flutter_slidable: ^3.1.1
+
+  # UUID
+  uuid: ^4.5.1
+
+  # File saving for web
+  universal_html: ^2.2.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  riverpod_generator: ^2.6.3
+  build_runner: ^2.4.14
+  json_serializable: ^6.9.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
